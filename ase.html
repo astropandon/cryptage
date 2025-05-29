@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>تشفير النصوص</title>
+    <style>
+        body {
+            font-family: Tahoma, Arial, sans-serif;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background: #fff;
+            padding: 32px 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+            max-width: 370px;
+            width: 100%;
+        }
+        label {
+            display: block;
+            margin-bottom: 7px;
+            font-weight: bold;
+        }
+        input, select, textarea, button {
+            width: 100%;
+            margin-bottom: 18px;
+            padding: 7px 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        button {
+            background: #1a73e8;
+            color: #fff;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #155bb5;
+        }
+        textarea {
+            resize: vertical;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 style="text-align:center">تشفير النصوص</h2>
+        <label for="inputText">النص المراد تشفيره:</label>
+        <input type="text" id="inputText" placeholder="أدخل النص هنا">
+        
+        <label for="encryptionType">نوع التشفير:</label>
+        <select id="encryptionType">
+            <option value="aes128">AES-128</option>
+            <option value="aes256">AES-256</option>
+            <option value="des">DES</option>
+            <option value="des3">TripleDES</option>
+        </select>
+        
+        <label for="key">المفتاح (Key):</label>
+        <input type="text" id="key" placeholder="أدخل المفتاح السري">
+        
+        <button onclick="encrypt()">تشفير</button>
+        
+        <label for="result">النص المشفر:</label>
+        <textarea id="result" rows="4" readonly></textarea>
+    </div>
+    
+    <!-- تحميل مكتبة CryptoJS من CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+    <script>
+        function padKey(key, length) {
+            // دالة لضبط طول المفتاح المطلوب (AES-128: 16 بايت، AES-256: 32 بايت)
+            if(key.length > length) return key.slice(0, length);
+            while(key.length < length) key += "0";
+            return key;
+        }
+
+        function encrypt() {
+            const text = document.getElementById('inputText').value;
+            const keyInput = document.getElementById('key').value;
+            const type = document.getElementById('encryptionType').value;
+            let encrypted = '';
+            if (!text || !keyInput) {
+                alert("يرجى إدخال النص والمفتاح.");
+                return;
+            }
+            try {
+                switch(type) {
+                    case 'aes128':
+                        var key128 = CryptoJS.enc.Utf8.parse(padKey(keyInput, 16));
+                        encrypted = CryptoJS.AES.encrypt(text, key128, { 
+                            mode: CryptoJS.mode.ECB, 
+                            padding: CryptoJS.pad.Pkcs7 
+                        }).toString();
+                        break;
+                    case 'aes256':
+                        var key256 = CryptoJS.enc.Utf8.parse(padKey(keyInput, 32));
+                        encrypted = CryptoJS.AES.encrypt(text, key256, { 
+                            mode: CryptoJS.mode.ECB, 
+                            padding: CryptoJS.pad.Pkcs7 
+                        }).toString();
+                        break;
+                    case 'des':
+                        var keyDes = CryptoJS.enc.Utf8.parse(padKey(keyInput, 8));
+                        encrypted = CryptoJS.DES.encrypt(text, keyDes, { 
+                            mode: CryptoJS.mode.ECB, 
+                            padding: CryptoJS.pad.Pkcs7 
+                        }).toString();
+                        break;
+                    case 'des3':
+                        var key3Des = CryptoJS.enc.Utf8.parse(padKey(keyInput, 24));
+                        encrypted = CryptoJS.TripleDES.encrypt(text, key3Des, { 
+                            mode: CryptoJS.mode.ECB, 
+                            padding: CryptoJS.pad.Pkcs7 
+                        }).toString();
+                        break;
+                    default:
+                        encrypted = "نوع التشفير غير مدعوم.";
+                }
+            } catch(e) {
+                encrypted = "حدث خطأ أثناء التشفير!";
+            }
+            document.getElementById('result').value = encrypted;
+        }
+    </script>
+</body>
+</html>
