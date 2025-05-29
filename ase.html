@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>تشفير النصوص</title>
+    <title>Cryptage de texte</title>
     <style>
         body {
             font-family: Tahoma, Arial, sans-serif;
@@ -52,32 +52,32 @@
 </head>
 <body>
     <div class="container">
-        <h2 style="text-align:center">تشفير النصوص</h2>
-        <label for="inputText">النص المراد تشفيره:</label>
-        <input type="text" id="inputText" placeholder="أدخل النص هنا">
-        
-        <label for="encryptionType">نوع التشفير:</label>
+        <h2 style="text-align:center">Cryptage de texte</h2>
+        <label for="inputText">Texte à chiffrer :</label>
+        <input type="text" id="inputText" placeholder="Entrez le texte ici">
+
+        <label for="encryptionType">Type de chiffrement :</label>
         <select id="encryptionType">
             <option value="aes128">AES-128</option>
             <option value="aes256">AES-256</option>
             <option value="des">DES</option>
             <option value="des3">TripleDES</option>
         </select>
-        
-        <label for="key">المفتاح (Key):</label>
-        <input type="text" id="key" placeholder="أدخل المفتاح السري">
-        
-        <button onclick="encrypt()">تشفير</button>
-        
-        <label for="result">النص المشفر:</label>
+
+        <label for="key">Clé (Key) :</label>
+        <input type="text" id="key" placeholder="Entrez la clé secrète">
+
+        <button onclick="encrypt()">Chiffrer</button>
+
+        <label for="result">Texte chiffré :</label>
         <textarea id="result" rows="4" readonly></textarea>
     </div>
-    
-    <!-- تحميل مكتبة CryptoJS من CDN -->
+
+    <!-- Chargement de la bibliothèque CryptoJS depuis CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
     <script>
         function padKey(key, length) {
-            // دالة لضبط طول المفتاح المطلوب (AES-128: 16 بايت، AES-256: 32 بايت)
+            // Fonction pour ajuster la longueur de la clé (AES-128 : 16 bytes, AES-256 : 32 bytes)
             if(key.length > length) return key.slice(0, length);
             while(key.length < length) key += "0";
             return key;
@@ -89,7 +89,7 @@
             const type = document.getElementById('encryptionType').value;
             let encrypted = '';
             if (!text || !keyInput) {
-                alert("يرجى إدخال النص والمفتاح.");
+                alert("Veuillez entrer le texte et la clé.");
                 return;
             }
             try {
@@ -123,10 +123,10 @@
                         }).toString();
                         break;
                     default:
-                        encrypted = "نوع التشفير غير مدعوم.";
+                        encrypted = "Type de chiffrement non supporté.";
                 }
             } catch(e) {
-                encrypted = "حدث خطأ أثناء التشفير!";
+                encrypted = "Une erreur est survenue lors du chiffrement !";
             }
             document.getElementById('result').value = encrypted;
         }
