@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Encryption Tool</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsencrypt/3.2.1/jsencrypt.min.js"></script>
+    <style>
+        /* Simple and Clean CSS Design */
+:root {
+    --primary-color: #4CAF50;
+    --secondary-color: #2196F3;
+    --background-color: #f5f5f5;
+    --text-color: #333;
+    --border-color: #ddd;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    line-height: 1.6;
+    padding: 20px;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: var(--text-color);
+}
+
+.encryption-type, .algorithm-selection, .input-section, .output-section {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.select-input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+
+textarea {
+    width: 100%;
+    min-height: 100px;
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    resize: vertical;
+}
+
+input[type="password"] {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+
+.button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.secondary {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+.button:hover {
+    opacity: 0.9;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+#keySection {
+    margin: 20px 0;
+}
+
+.key-pair {
+    margin-bottom: 10px;
+}
+
+.key-pair textarea {
+    min-height: 80px;
+}
+
+.notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 10px 20px;
+    border-radius: 4px;
+    background-color: #333;
+    color: white;
+    display: none;
+}
+
+.notification.show {
+    display: block;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+    .container {
+        padding: 10px;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+    }
+
+    .button {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Encryption Tool</h1>
+        
+        <div class="encryption-type">
+            <label for="encryptionType">Select Encryption Type:</label>
+            <select id="encryptionType" class="select-input">
+                <option value="symmetric">Symmetric Encryption</option>
+                <option value="asymmetric">Asymmetric Encryption</option>
+                <option value="hybrid">Hybrid Encryption</option>
+            </select>
+        </div>
+
+        <div class="algorithm-selection">
+            <label for="algorithm">Select Algorithm:</label>
+            <select id="algorithm" class="select-input">
+                <optgroup label="Symmetric">
+                    <option value="AES">AES</option>
+                    <option value="DES">DES</option>
+                    <option value="3DES">3DES</option>
+                </optgroup>
+                <optgroup label="Asymmetric">
+                    <option value="RSA">RSA</option>
+                    <option value="ECC">ECC</option>
+                </optgroup>
+            </select>
+        </div>
+
+        <div class="input-section">
+            <label for="inputText">Input Text:</label>
+            <textarea id="inputText" placeholder="Enter text to encrypt/decrypt"></textarea>
+        </div>
+
+        <div id="keySection">
+            <div id="symmetricKey">
+                <label for="secretKey">Secret Key:</label>
+                <input type="password" id="secretKey" placeholder="Enter secret key">
+                <button id="generateSymKey" class="button">Generate Key</button>
+            </div>
+
+            <div id="asymmetricKey" style="display: none;">
+                <div class="key-pair">
+                    <label for="publicKey">Public Key:</label>
+                    <textarea id="publicKey" placeholder="Enter public key"></textarea>
+                </div>
+                <div class="key-pair">
+                    <label for="privateKey">Private Key:</label>
+                    <textarea id="privateKey" placeholder="Enter private key"></textarea>
+                </div>
+                <button id="generateKeyPair" class="button">Generate Key Pair</button>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button id="encryptBtn" class="button primary">Encrypt</button>
+            <button id="decryptBtn" class="button secondary">Decrypt</button>
+        </div>
+
+        <div class="output-section">
+            <label for="outputText">Result:</label>
+            <textarea id="outputText" readonly></textarea>
+            <button id="copyOutput" class="button">Copy Result</button>
+        </div>
+
+        <div id="notification" class="notification"></div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+    // DOM Elements
+    const elements = {
+        encryptionType: document.getElementById('encryptionType'),
+        algorithm: document.getElementById('algorithm'),
+        inputText: document.getElementById('inputText'),
+        outputText: document.getElementById('outputText'),
+        secretKey: document.getElementById('secretKey'),
+        publicKey: document.getElementById('publicKey'),
+        privateKey: document.getElementById('privateKey'),
+        symmetricKey: document.getElementById('symmetricKey'),
+        asymmetricKey: document.getElementById('asymmetricKey'),
+        encryptBtn: document.getElementById('encryptBtn'),
+        decryptBtn: document.getElementById('decryptBtn'),
+        generateSymKey: document.getElementById('generateSymKey'),
+        generateKeyPair: document.getElementById('generateKeyPair'),
+        copyOutput: document.getElementById('copyOutput'),
+        notification: document.getElementById('notification')
+    };
+
+    // Event Listeners
+    elements.encryptionType.addEventListener('change', updateAlgorithmOptions);
+    elements.algorithm.addEventListener('change', updateKeySection);
+    elements.generateSymKey.addEventListener('click', generateSymmetricKey);
+    elements.generateKeyPair.addEventListener('click', generateKeyPair);
+    elements.encryptBtn.addEventListener('click', handleEncryption);
+    elements.decryptBtn.addEventListener('click', handleDecryption);
+    elements.copyOutput.addEventListener('click', copyToClipboard);
+
+    // Update UI based on encryption type
+    function updateAlgorithmOptions() {
+        const type = elements.encryptionType.value;
+        const algorithm = elements.algorithm;
+        
+        // Clear existing options
+        algorithm.innerHTML = '';
+        
+        if (type === 'symmetric' || type === 'hybrid') {
+            addOptionsGroup(algorithm, 'Symmetric', ['AES', 'DES', '3DES']);
+        }
+        
+        if (type === 'asymmetric' || type === 'hybrid') {
+            addOptionsGroup(algorithm, 'Asymmetric', ['RSA', 'ECC']);
+        }
+        
+        updateKeySection();
+    }
+
+    function addOptionsGroup(select, label, options) {
+        const group = document.createElement('optgroup');
+        group.label = label;
+        options.forEach(option => {
+            const opt = document.createElement('option');
+            opt.value = option;
+            opt.textContent = option;
+            group.appendChild(opt);
+        });
+        select.appendChild(group);
+    }
+
+    function updateKeySection() {
+        const algorithm = elements.algorithm.value;
+        elements.symmetricKey.style.display = 
+            ['AES', 'DES', '3DES'].includes(algorithm) ? 'block' : 'none';
+        elements.asymmetricKey.style.display = 
+            ['RSA', 'ECC'].includes(algorithm) ? 'block' : 'none';
+    }
+
+    // Key Generation
+    function generateSymmetricKey() {
+        const key = CryptoJS.lib.WordArray.random(32);
+        elements.secretKey.value = key.toString();
+        showNotification('Symmetric key generated!');
+    }
+
+    function generateKeyPair() {
+        try {
+            const algorithm = elements.algorithm.value;
+            if (algorithm === 'RSA') {
+                const crypt = new JSEncrypt({default_key_size: 2048});
+                elements.publicKey.value = crypt.getPublicKey();
+                elements.privateKey.value = crypt.getPrivateKey();
+            } else if (algorithm === 'ECC') {
+                // Simple ECC key pair generation (for demonstration)
+                const EC = require('elliptic').ec;
+                const ec = new EC('p256');
+                const keyPair = ec.genKeyPair();
+                elements.publicKey.value = keyPair.getPublic('hex');
+                elements.privateKey.value = keyPair.getPrivate('hex');
+            }
+            showNotification('Key pair generated successfully!');
+        } catch (error) {
+            showNotification('Error generating key pair: ' + error.message, 'error');
+        }
+    }
+
+    // Encryption/Decryption
+    async function handleEncryption() {
+        try {
+            const text = elements.inputText.value;
+            if (!text) {
+                showNotification('Please enter text to encrypt', 'error');
+                return;
+            }
+
+            const algorithm = elements.algorithm.value;
+            let result;
+
+            switch (algorithm) {
+                case 'AES':
+                    result = encryptAES(text);
+                    break;
+                case 'DES':
+                    result = encryptDES(text);
+                    break;
+                case '3DES':
+                    result = encrypt3DES(text);
+                    break;
+                case 'RSA':
+                    result = encryptRSA(text);
+                    break;
+                case 'ECC':
+                    result = encryptECC(text);
+                    break;
+            }
+
+            elements.outputText.value = result;
+            showNotification('Text encrypted successfully!');
+        } catch (error) {
+            showNotification('Encryption failed: ' + error.message, 'error');
+        }
+    }
+
+    async function handleDecryption() {
+        try {
+            const text = elements.inputText.value;
+            if (!text) {
+                showNotification('Please enter text to decrypt', 'error');
+                return;
+            }
+
+            const algorithm = elements.algorithm.value;
+            let result;
+
+            switch (algorithm) {
+                case 'AES':
+                    result = decryptAES(text);
+                    break;
+                case 'DES':
+                    result = decryptDES(text);
+                    break;
+                case '3DES':
+                    result = decrypt3DES(text);
+                    break;
+                case 'RSA':
+                    result = decryptRSA(text);
+                    break;
+                case 'ECC':
+                    result = decryptECC(text);
+                    break;
+            }
+
+            elements.outputText.value = result;
+            showNotification('Text decrypted successfully!');
+        } catch (error) {
+            showNotification('Decryption failed: ' + error.message, 'error');
+        }
+    }
+
+    // Encryption Methods
+    function encryptAES(text) {
+        if (!elements.secretKey.value) {
+            throw new Error('Please enter a secret key');
+        }
+        return CryptoJS.AES.encrypt(text, elements.secretKey.value).toString();
+    }
+
+    function encryptDES(text) {
+        if (!elements.secretKey.value) {
+            throw new Error('Please enter a secret key');
+        }
+        return CryptoJS.DES.encrypt(text, elements.secretKey.value).toString();
+    }
+
+    function encrypt3DES(text) {
+        if (!elements.secretKey.value) {
+            throw new Error('Please enter a secret key');
+        }
+        return CryptoJS.TripleDES.encrypt(text, elements.secretKey.value).toString();
+    }
+
+    function encryptRSA(text) {
+        if (!elements.publicKey.value) {
+            throw new Error('Please enter or generate a public key');
+        }
+        const encrypt = new JSEncrypt();
+        encrypt.setPublicKey(elements.publicKey.value);
+        return encrypt.encrypt(text);
+    }
+
+    function encryptECC(text) {
+        // Simplified ECC encryption (for demonstration)
+        if (!elements.publicKey.value) {
+            throw new Error('Please enter or generate a public key');
+        }
+        return `ECC-encrypted: ${text}`; // Placeholder for actual ECC encryption
+    }
+
+    // Decryption Methods
+    function decryptAES(text) {
+        if (!elements.secretKey.value) {
+            throw new Error('Please enter a secret key');
+        }
+        return CryptoJS.AES.decrypt(text, elements.secretKey.value).toString(CryptoJS.enc.Utf8);
+    }
+
+    function decryptDES(text) {
+        if (!elements.secretKey.value) {
+            throw new Error('Please enter a secret key');
+        }
+        return CryptoJS.DES.decrypt(text, elements.secretKey.value).toString(CryptoJS.enc.Utf8);
+    }
+
+    function decrypt3DES(text) {
+        if (!elements.secretKey.value) {
+            throw new Error('Please enter a secret key');
+        }
+        return CryptoJS.TripleDES.decrypt(text, elements.secretKey.value).toString(CryptoJS.enc.Utf8);
+    }
+
+    function decryptRSA(text) {
+        if (!elements.privateKey.value) {
+            throw new Error('Please enter or generate a private key');
+        }
+        const decrypt = new JSEncrypt();
+        decrypt.setPrivateKey(elements.privateKey.value);
+        return decrypt.decrypt(text);
+    }
+
+    function decryptECC(text) {
+        // Simplified ECC decryption (for demonstration)
+        if (!elements.privateKey.value) {
+            throw new Error('Please enter or generate a private key');
+        }
+        return text.replace('ECC-encrypted: ', ''); // Placeholder for actual ECC decryption
+    }
+
+    // Utility Functions
+    async function copyToClipboard() {
+        try {
+            await navigator.clipboard.writeText(elements.outputText.value);
+            showNotification('Copied to clipboard!');
+        } catch (error) {
+            showNotification('Failed to copy to clipboard', 'error');
+        }
+    }
+
+    function showNotification(message, type = 'success') {
+        const notification = elements.notification;
+        notification.textContent = message;
+        notification.className = `notification show ${type}`;
+        notification.style.backgroundColor = type === 'error' ? '#f44336' : '#4CAF50';
+        
+        setTimeout(() => {
+            notification.classList.remove('show');
+        }, 3000);
+    }
+
+    // Initialize the UI
+    updateAlgorithmOptions();
+});
+    </script>
+</body>
+</html>
